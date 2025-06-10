@@ -1,56 +1,88 @@
 "use client";
-import React, { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import React, { useState, useEffect } from "react";
 
 type OrderStatus = "Pendente" | "Processando" | "Finalizado";
 
 type Order = {
-  id: string; // GUID
-  product: string;
-  customer: string;
-  date: string; // ISO string
+  id: string;
+  cliente: string;
+  produto: string;
+  data: string;
   status: OrderStatus;
-  total: number; // decimal
+  valor: number;
 };
 
-const initialOrders: Order[] = [
-  {
-    id: uuidv4(),
-    product: "Notebook",
-    customer: "João Silva",
-    date: "2025-06-10T10:00:00",
-    status: "Pendente",
-    total: 150.5,
-  },
-  {
-    id: uuidv4(),
-    product: "Mouse",
-    customer: "Maria Souza",
-    date: "2025-06-09T14:30:00",
-    status: "Processando",
-    total: 320.0,
-  },
-  {
-    id: uuidv4(),
-    product: "Teclado",
-    customer: "Carlos Lima",
-    date: "2025-06-08T09:15:00",
-    status: "Finalizado",
-    total: 89.99,
-  },
-];
+type ApiOrder = {
+  id: string;
+  cliente: string;
+  produto: string;
+  data: string;
+  status: number; // 0, 1, 2
+  valor: number;
+};
+
+const statusMap: Record<number, OrderStatus> = {
+  0: "Pendente",
+  1: "Processando",
+  2: "Finalizado",
+};
+
+const statusReverseMap: Record<OrderStatus, number> = {
+  Pendente: 0,
+  Processando: 1,
+  Finalizado: 2,
+};
 
 const OrdersTable: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
-    product: "",
-    customer: "",
-    date: "",
+    cliente: "",
+    produto: "",
+    data: "",
     status: "" as OrderStatus | "",
-    total: "",
+    valor: "",
   });
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Buscar todos os pedidos
+  const fetchOrders = async () => {
+    setLoading(true);
+    const res = await fetch("http://localhost:5297/orders");
+    const data: ApiOrder[] = await res.json();
+    setOrders(
+      data.map((o) => ({
+        id: o.id,
+        cliente: o.cliente,
+        produto: o.produto,
+        data: o.data,
+        status: statusMap[o.status],
+        valor: typeof o.valor === "number" ? o.valor : 0,
+      }))
+    );
+    setLoading(false);
+  };
+
+  // Buscar detalhes do pedido
+  const fetchOrderById = async (id: string) => {
+    setLoading(true);
+    const res = await fetch(`http://localhost:5297/orders/${id}`);
+    const o: ApiOrder = await res.json();
+    setSelectedOrder({
+      id: o.id,
+      cliente: o.cliente,
+      produto: o.produto,
+      data: o.data,
+      status: statusMap[o.status],
+      valor: typeof o.valor === "number" ? o.valor : 0,
+    });
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -58,25 +90,33 @@ const OrdersTable: React.FC = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Adicionar novo pedido
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setOrders([
-      ...orders,
-      {
-        id: uuidv4(),
-        product: form.product,
-        customer: form.customer,
-        date: form.date,
-        status: form.status as OrderStatus,
-        total: parseFloat(form.total),
-      },
-    ]);
-    setForm({ product: "", customer: "", date: "", status: "", total: "" });
+    setLoading(true);
+
+    // Converte data para ISO se vier do input datetime-local
+    const dataISO = form.data ? new Date(form.data).toISOString() : "";
+
+    await fetch("http://localhost:5297/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cliente: form.cliente,
+        produto: form.produto,
+        data: dataISO,
+        status: statusReverseMap[form.status as OrderStatus],
+        valor: parseFloat(form.valor),
+      }),
+    });
+    setForm({ cliente: "", produto: "", data: "", status: "", valor: "" });
     setShowModal(false);
+    await fetchOrders();
+    setLoading(false);
   };
 
-  const handleRowClick = (order: Order) => {
-    setSelectedOrder(order);
+  const handleRowClick = async (order: Order) => {
+    await fetchOrderById(order.id);
     setShowModal(true);
   };
 
@@ -97,6 +137,8 @@ const OrdersTable: React.FC = () => {
         Novo Pedido
       </button>
 
+      {loading && <div className="mb-4 text-blue-600">Carregando...</div>}
+
       <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
         <thead>
           <tr>
@@ -114,12 +156,12 @@ const OrdersTable: React.FC = () => {
               className="border-t cursor-pointer hover:bg-blue-50"
               onClick={() => handleRowClick(order)}
             >
-              <td className="px-4 py-2">{order.customer}</td>
-              <td className="px-4 py-2">{order.product}</td>
-              <td className="px-4 py-2">{order.total.toFixed(2)}</td>
+              <td className="px-4 py-2">{order.cliente}</td>
+              <td className="px-4 py-2">{order.produto}</td>
+              <td className="px-4 py-2">{order.valor.toFixed(2)}</td>
               <td className="px-4 py-2">{order.status}</td>
               <td className="px-4 py-2">
-                {new Date(order.date).toLocaleString("pt-BR")}
+                {new Date(order.data).toLocaleString("pt-BR")}
               </td>
             </tr>
           ))}
@@ -134,20 +176,20 @@ const OrdersTable: React.FC = () => {
                 <h2 className="text-xl font-bold mb-4">Detalhes do Pedido</h2>
                 <div className="mb-4">
                   <p>
-                    <strong>Produto:</strong> {selectedOrder.product}
+                    <strong>Produto:</strong> {selectedOrder.produto}
                   </p>
                   <p>
-                    <strong>Cliente:</strong> {selectedOrder.customer}
+                    <strong>Cliente:</strong> {selectedOrder.cliente}
                   </p>
                   <p>
                     <strong>Data:</strong>{" "}
-                    {new Date(selectedOrder.date).toLocaleString("pt-BR")}
+                    {new Date(selectedOrder.data).toLocaleString("pt-BR")}
                   </p>
                   <p>
                     <strong>Status:</strong> {selectedOrder.status}
                   </p>
                   <p>
-                    <strong>Valor:</strong> R$ {selectedOrder.total.toFixed(2)}
+                    <strong>Valor:</strong> R$ {selectedOrder.valor.toFixed(2)}
                   </p>
                   <p>
                     <strong>ID:</strong> {selectedOrder.id}
@@ -167,27 +209,27 @@ const OrdersTable: React.FC = () => {
                 <h2 className="text-xl font-bold mb-4">Novo Pedido</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <input
-                    name="product"
+                    name="produto"
                     type="text"
                     placeholder="Produto"
-                    value={form.product}
+                    value={form.produto}
                     onChange={handleChange}
                     required
                     className="w-full border px-3 py-2 rounded"
                   />
                   <input
-                    name="customer"
+                    name="cliente"
                     type="text"
                     placeholder="Cliente"
-                    value={form.customer}
+                    value={form.cliente}
                     onChange={handleChange}
                     required
                     className="w-full border px-3 py-2 rounded"
                   />
                   <input
-                    name="date"
+                    name="data"
                     type="datetime-local"
-                    value={form.date}
+                    value={form.data}
                     onChange={handleChange}
                     required
                     className="w-full border px-3 py-2 rounded"
@@ -205,11 +247,11 @@ const OrdersTable: React.FC = () => {
                     <option value="Finalizado">Finalizado</option>
                   </select>
                   <input
-                    name="total"
+                    name="valor"
                     type="number"
                     step="0.01"
                     placeholder="Valor (R$)"
-                    value={form.total}
+                    value={form.valor}
                     onChange={handleChange}
                     required
                     className="w-full border px-3 py-2 rounded"
