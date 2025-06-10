@@ -125,6 +125,19 @@ const OrdersTable: React.FC = () => {
     setSelectedOrder(null);
   };
 
+  // Deletar pedido
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Deseja realmente excluir este pedido?")) return;
+    setLoading(true);
+    await fetch(`http://localhost:5297/orders/${id}`, {
+      method: "DELETE",
+    });
+    setShowModal(false);
+    setSelectedOrder(null);
+    await fetchOrders();
+    setLoading(false);
+  };
+
   return (
     <div className="overflow-x-auto w-full mt-8">
       <button
@@ -195,7 +208,13 @@ const OrdersTable: React.FC = () => {
                     <strong>ID:</strong> {selectedOrder.id}
                   </p>
                 </div>
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
+                  <button
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    onClick={() => handleDelete(selectedOrder.id)}
+                  >
+                    Excluir
+                  </button>
                   <button
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                     onClick={handleCloseModal}
