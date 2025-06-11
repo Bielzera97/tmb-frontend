@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import styles from "./OrdersTable.module.css";
+import * as signalR from "@microsoft/signalr";
 
 type OrderStatus = "Pendente" | "Processando" | "Finalizado";
 
@@ -84,6 +85,26 @@ const OrdersTable: React.FC = () => {
 
   useEffect(() => {
     fetchOrders();
+
+    // SignalR connection
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl("http://localhost:5297/hub/pedidos") // ajuste a URL se necessário
+      .withAutomaticReconnect()
+      .build();
+
+    connection.start().then(() => {
+      console.log("Conectado ao SignalR");
+    });
+
+    // Quando receber notificação, atualiza os pedidos
+    connection.on("PedidoAtualizado", () => {
+      fetchOrders();
+    });
+
+    // Limpeza ao desmontar
+    return () => {
+      connection.stop();
+    };
   }, []);
 
   const handleChange = (
