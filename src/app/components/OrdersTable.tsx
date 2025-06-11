@@ -52,7 +52,7 @@ const OrdersTable: React.FC = () => {
   // Buscar todos os pedidos
   const fetchOrders = async () => {
     setLoading(true);
-    const res = await fetch("http://localhost:5000/orders");
+    const res = await fetch("https://tmb-challenge.onrender.com/orders");
     const data: ApiOrder[] = await res.json();
     setOrders(
       data.map((o) => ({
@@ -70,7 +70,7 @@ const OrdersTable: React.FC = () => {
   // Buscar detalhes do pedido
   const fetchOrderById = async (id: string) => {
     setLoading(true);
-    const res = await fetch(`http://localhost:5000/orders/${id}`);
+    const res = await fetch(`https://tmb-challenge.onrender.com/orders/${id}`);
     const o: ApiOrder = await res.json();
     setSelectedOrder({
       id: o.id,
@@ -88,7 +88,7 @@ const OrdersTable: React.FC = () => {
 
     // SignalR connection
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:5000/hub/pedidos") // ajuste a URL se necessário
+      .withUrl("https://tmb-challenge.onrender.com/hub/pedidos") // ajuste a URL se necessário
       .withAutomaticReconnect()
       .build();
 
@@ -147,7 +147,7 @@ const OrdersTable: React.FC = () => {
 
     if (editMode && selectedOrder) {
       // EDITAR PEDIDO
-      await fetch(`http://localhost:5000/orders/${selectedOrder.id}`, {
+      await fetch(`https://tmb-challenge.onrender.com/orders/${selectedOrder.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -161,7 +161,7 @@ const OrdersTable: React.FC = () => {
       });
     } else {
       // NOVO PEDIDO
-      await fetch("http://localhost:5000/orders", {
+      await fetch("https://tmb-challenge.onrender.com/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -192,7 +192,7 @@ const OrdersTable: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (!window.confirm("Deseja realmente excluir este pedido?")) return;
     setLoading(true);
-    await fetch(`http://localhost:5000/orders/${id}`, {
+    await fetch(`https://tmb-challenge.onrender.com/orders/${id}`, {
       method: "DELETE",
     });
     setShowModal(false);
