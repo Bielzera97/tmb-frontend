@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import styles from "./OrdersTable.module.css";
 
 type OrderStatus = "Pendente" | "Processando" | "Finalizado";
 
@@ -45,6 +46,7 @@ const OrdersTable: React.FC = () => {
   });
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false); // NOVO
 
   // Buscar todos os pedidos
   const fetchOrders = async () => {
@@ -90,39 +92,79 @@ const OrdersTable: React.FC = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleRowClick = async (order: Order) => {
+    await fetchOrderById(order.id);
+    setForm({
+      cliente: order.cliente,
+      produto: order.produto,
+      data: order.data.slice(0, 16), // Para input datetime-local
+      status: order.status,
+      valor: order.valor.toString(),
+    });
+    setShowModal(true);
+    setEditMode(false);
+  };
+
+  const handleEdit = () => {
+    if (!selectedOrder) return;
+    setForm({
+      cliente: selectedOrder.cliente,
+      produto: selectedOrder.produto,
+      data: selectedOrder.data.slice(0, 16),
+      status: selectedOrder.status,
+      valor: selectedOrder.valor.toString(),
+    });
+    setEditMode(true);
+  };
+
   // Adicionar novo pedido
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Converte data para ISO se vier do input datetime-local
     const dataISO = form.data ? new Date(form.data).toISOString() : "";
 
-    await fetch("http://localhost:5297/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        cliente: form.cliente,
-        produto: form.produto,
-        data: dataISO,
-        status: statusReverseMap[form.status as OrderStatus],
-        valor: parseFloat(form.valor),
-      }),
-    });
+    if (editMode && selectedOrder) {
+      // EDITAR PEDIDO
+      await fetch(`http://localhost:5297/orders/${selectedOrder.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedOrder.id, // Adicione o id aqui!
+          cliente: form.cliente,
+          produto: form.produto,
+          data: dataISO,
+          status: statusReverseMap[form.status as OrderStatus],
+          valor: parseFloat(form.valor),
+        }),
+      });
+    } else {
+      // NOVO PEDIDO
+      await fetch("http://localhost:5297/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cliente: form.cliente,
+          produto: form.produto,
+          data: dataISO,
+          status: statusReverseMap[form.status as OrderStatus],
+          valor: parseFloat(form.valor),
+        }),
+      });
+    }
     setForm({ cliente: "", produto: "", data: "", status: "", valor: "" });
     setShowModal(false);
+    setSelectedOrder(null);
+    setEditMode(false);
     await fetchOrders();
     setLoading(false);
-  };
-
-  const handleRowClick = async (order: Order) => {
-    await fetchOrderById(order.id);
-    setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedOrder(null);
+    setEditMode(false);
+    setForm({ cliente: "", produto: "", data: "", status: "", valor: "" });
   };
 
   // Deletar pedido
@@ -139,55 +181,70 @@ const OrdersTable: React.FC = () => {
   };
 
   return (
-    <div className="overflow-x-auto w-full mt-8">
-      <button
-        className="flex justify-end mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-        onClick={() => {
-          setShowModal(true);
-          setSelectedOrder(null);
-        }}
-      >
-        Novo Pedido
-      </button>
+    <div className={styles.wrapper}>
+      <div className={styles.button}>
+        <button
+          className={styles.addBtn}
+          onClick={() => {
+            setShowModal(true);
+            setSelectedOrder(null);
+            setEditMode(true);
+            setForm({ cliente: "", produto: "", data: "", status: "", valor: "" });
+          }}
+        >
+          Novo Pedido
+        </button>
+      </div>
 
-      {loading && <div className="mb-4 text-blue-600">Carregando...</div>}
+      {loading && <div style={{ color: "#2563eb", marginBottom: 16 }}>Carregando...</div>}
 
-      <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+      <table className={styles.table}>
         <thead>
           <tr>
-            <th className="px-4 py-2 text-left">Cliente</th>
-            <th className="px-4 py-2 text-left">Produto</th>
-            <th className="px-4 py-2 text-left">Valor (R$)</th>
-            <th className="px-4 py-2 text-left">Status</th>
-            <th className="px-4 py-2 text-left">Data Criação</th>
+            <th>Cliente</th>
+            <th>Produto</th>
+            <th>Valor (R$)</th>
+            <th>Status</th>
+            <th>Data Criação</th>
           </tr>
         </thead>
         <tbody>
           {orders.map((order) => (
             <tr
               key={order.id}
-              className="border-t cursor-pointer hover:bg-blue-50"
               onClick={() => handleRowClick(order)}
             >
-              <td className="px-4 py-2">{order.cliente}</td>
-              <td className="px-4 py-2">{order.produto}</td>
-              <td className="px-4 py-2">{order.valor.toFixed(2)}</td>
-              <td className="px-4 py-2">{order.status}</td>
-              <td className="px-4 py-2">
-                {new Date(order.data).toLocaleString("pt-BR")}
+              <td>{order.cliente}</td>
+              <td>{order.produto}</td>
+              <td>{order.valor.toFixed(2)}</td>
+              <td>
+                <span
+                  className={
+                    styles.status +
+                    " " +
+                    (order.status === "Pendente"
+                      ? styles.statusPendente
+                      : order.status === "Processando"
+                      ? styles.statusProcessando
+                      : styles.statusFinalizado)
+                  }
+                >
+                  {order.status}
+                </span>
               </td>
+              <td>{new Date(order.data).toLocaleString("pt-BR")}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
-            {selectedOrder ? (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            {selectedOrder && !editMode ? (
               <>
-                <h2 className="text-xl font-bold mb-4">Detalhes do Pedido</h2>
-                <div className="mb-4">
+                <h2 className={styles.modalTitle}>Detalhes do Pedido</h2>
+                <div className={styles.modalDetails}>
                   <p>
                     <strong>Produto:</strong> {selectedOrder.produto}
                   </p>
@@ -208,15 +265,21 @@ const OrdersTable: React.FC = () => {
                     <strong>ID:</strong> {selectedOrder.id}
                   </p>
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className={styles.modalActions}>
                   <button
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    className={styles.deleteBtn}
                     onClick={() => handleDelete(selectedOrder.id)}
                   >
                     Excluir
                   </button>
                   <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className={styles.submitBtn}
+                    onClick={handleEdit}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    className={styles.closeBtn}
                     onClick={handleCloseModal}
                   >
                     Fechar
@@ -225,8 +288,10 @@ const OrdersTable: React.FC = () => {
               </>
             ) : (
               <>
-                <h2 className="text-xl font-bold mb-4">Novo Pedido</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <h2 className={styles.modalTitle}>
+                  {selectedOrder ? "Editar Pedido" : "Novo Pedido"}
+                </h2>
+                <form onSubmit={handleSubmit}>
                   <input
                     name="produto"
                     type="text"
@@ -234,7 +299,7 @@ const OrdersTable: React.FC = () => {
                     value={form.produto}
                     onChange={handleChange}
                     required
-                    className="w-full border px-3 py-2 rounded"
+                    className={styles.input}
                   />
                   <input
                     name="cliente"
@@ -243,7 +308,7 @@ const OrdersTable: React.FC = () => {
                     value={form.cliente}
                     onChange={handleChange}
                     required
-                    className="w-full border px-3 py-2 rounded"
+                    className={styles.input}
                   />
                   <input
                     name="data"
@@ -251,14 +316,14 @@ const OrdersTable: React.FC = () => {
                     value={form.data}
                     onChange={handleChange}
                     required
-                    className="w-full border px-3 py-2 rounded"
+                    className={styles.input}
                   />
                   <select
                     name="status"
                     value={form.status}
                     onChange={handleChange}
                     required
-                    className="w-full border px-3 py-2 rounded"
+                    className={styles.select}
                   >
                     <option value="">Status</option>
                     <option value="Pendente">Pendente</option>
@@ -273,21 +338,21 @@ const OrdersTable: React.FC = () => {
                     value={form.valor}
                     onChange={handleChange}
                     required
-                    className="w-full border px-3 py-2 rounded"
+                    className={styles.input}
                   />
-                  <div className="flex justify-end gap-2">
+                  <div className={styles.modalActions}>
                     <button
                       type="button"
-                      className="px-4 py-2 bg-gray-300 rounded"
+                      className={styles.cancelBtn}
                       onClick={handleCloseModal}
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      className={styles.submitBtn}
                     >
-                      Adicionar
+                      {selectedOrder ? "Salvar" : "Adicionar"}
                     </button>
                   </div>
                 </form>

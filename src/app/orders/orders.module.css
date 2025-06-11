@@ -1,0 +1,35 @@
+.main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 3rem 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1rem;
+  letter-spacing: -1px;
+  text-shadow: 0 2px 8px #c7d2fe55;
+}
+
+.subtitle {
+  margin-top: 0.5rem;
+  font-size: 1.25rem;
+  color: #64748b;
+  margin-bottom: 2rem;
+}
+
+.ordersTableWrapper {
+  width: 100%;
+  max-width: 900px;
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px 0 #64748b22;
+  padding: 2rem;
+  margin-top: 2rem;
+}

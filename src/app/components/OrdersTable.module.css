@@ -1,0 +1,178 @@
+.wrapper {
+  overflow-x: auto;
+  width: 100%;
+  margin-top: 2rem;
+}
+
+.button {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.addBtn {
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.addBtn:hover {
+  background: linear-gradient(90deg, #1d4ed8 60%, #3b82f6 100%);
+}
+
+.table {
+  min-width: 100%;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px #64748b22;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+.table th, .table td {
+  padding: 1rem 1.2rem;
+  text-align: left;
+}
+
+.table th {
+  background: #f1f5f9;
+  color: #334155;
+  font-weight: 700;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.table tr {
+  border-top: 1px solid #e2e8f0;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.table tr:hover {
+  background: #e0e7ff;
+}
+
+.status {
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.95rem;
+  display: inline-block;
+}
+.statusPendente {
+  background: #fef9c3;
+  color: #b45309;
+}
+.statusProcessando {
+  background: #dbeafe;
+  color: #2563eb;
+}
+.statusFinalizado {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 1.2rem;
+  box-shadow: 0 8px 32px #64748b33;
+  width: 100%;
+  max-width: 420px;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(40px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+
+.modalTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  color: #1e293b;
+}
+
+.modalDetails p {
+  margin-bottom: 0.5rem;
+  color: #334155;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.deleteBtn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.deleteBtn:hover {
+  background: #b91c1c;
+}
+
+.closeBtn, .cancelBtn {
+  background: #e5e7eb;
+  color: #334155;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.closeBtn:hover, .cancelBtn:hover {
+  background: #cbd5e1;
+}
+
+.submitBtn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.submitBtn:hover {
+  background: #1d4ed8;
+}
+
+.input, .select {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.7rem;
+  font-size: 1rem;
+  background: #f8fafc;
+  color: #334155;
+  outline: none;
+  transition: border 0.2s;
+}
+.input:focus, .select:focus {
+  border: 1.5px solid #2563eb;
+}
