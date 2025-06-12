@@ -217,7 +217,12 @@ const OrdersTable: React.FC = () => {
         </button>
       </div>
 
-      {loading && <div style={{ color: "#2563eb", marginBottom: 16 }}>Carregando...</div>}
+      {loading && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+        </div>
+      )}
+
 
       <table className={styles.table}>
         <thead>
