@@ -203,3 +203,78 @@
     transform: rotate(360deg);
   }
 }
+/* Responsividade Geral */
+@media (max-width: 768px) {
+  .modal {
+    width: 90%;
+    padding: 1.5rem;
+  }
+
+  .table th, .table td {
+    padding: 0.8rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .addBtn,
+  .submitBtn,
+  .deleteBtn,
+  .closeBtn,
+  .cancelBtn {
+    font-size: 0.9rem;
+    padding: 0.4rem 1rem;
+  }
+
+  .modalTitle {
+    font-size: 1.1rem;
+  }
+
+  .input, .select {
+    font-size: 0.95rem;
+    padding: 0.6rem 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal {
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
+
+  .modalDetails p {
+    font-size: 0.9rem;
+  }
+
+  .modalActions {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+
+  .table th, .table td {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .status {
+    font-size: 0.85rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  .addBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .button {
+    justify-content: center;
+  }
+
+  .input, .select {
+    font-size: 0.9rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .modalTitle {
+    font-size: 1rem;
+  }
+}
