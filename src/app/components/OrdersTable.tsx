@@ -52,7 +52,8 @@ const OrdersTable: React.FC = () => {
   // Buscar todos os pedidos
   const fetchOrders = async () => {
     setLoading(true);
-    const res = await fetch("https://tmb-challenge.onrender.com/orders");
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const res = await fetch(`${apiUrl}/orders`);
     const data: ApiOrder[] = await res.json();
     setOrders(
       data.map((o) => ({
